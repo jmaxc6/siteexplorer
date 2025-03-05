@@ -9,11 +9,58 @@
 <body>
     <div class="container">
         <h1>Site Scraper</h1>
-        <input type="text" id="urlInput" placeholder="Enter the site URL">
-        <button id="scrapeButton">Start Scraping</button>
-        <p id="errorMessage" style="color: red; display: none;">Please enter a valid URL.</p>
+        <input type="file" id="fileInput" accept=".csv">
+        <button id="uploadButton">Upload & Process</button>
+        <p id="errorMessage" style="color: red; display: none;">Please upload a valid CSV file.</p>
+        <table id="dataTable" border="1" style="margin-top: 20px; display: none;">
+            <thead>
+                <tr>
+                    <th>Website URL</th>
+                    <th>Privacy Policy</th>
+                    <th>Terms of Service</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.getElementById('uploadButton').addEventListener('click', function () {
+            const fileInput = document.getElementById('fileInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const table = document.getElementById('dataTable');
+            const tbody = table.querySelector('tbody');
+
+            if (!fileInput.files.length) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Please upload a CSV file.';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://localhost:5001/process_csv', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'processed_output.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                alert('Processing completed! Downloading updated CSV.');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error occurred while processing the file. Please try again.');
+            });
+        });
+    </script>
 </body>
 </html>
